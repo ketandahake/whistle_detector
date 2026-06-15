@@ -18,13 +18,13 @@ public class AudioProcessor {
 
     private final WhistleListener listener;
 
-    // Heuristic thresholds
-    private static final int AMPLITUDE_THRESHOLD = 2000;
-    private static final int MIN_ZERO_CROSSING_RATE = 1000;
-    private static final int MAX_ZERO_CROSSING_RATE = 8000;
+    // Heuristic thresholds tweaked for emulators/laptop speakers
+    private static final int AMPLITUDE_THRESHOLD = 500; // Lowered significantly
+    private static final int MIN_ZERO_CROSSING_RATE = 800; // Widened lower bound
+    private static final int MAX_ZERO_CROSSING_RATE = 10000; // Widened upper bound
 
     // Consecutively positive frames required to confirm a whistle
-    private static final int REQUIRED_CONSECUTIVE_FRAMES = 10;
+    private static final int REQUIRED_CONSECUTIVE_FRAMES = 5; // Reduced required frames
     private int consecutiveWhistleFrames = 0;
 
     private long lastWhistleTime = 0;
@@ -42,7 +42,9 @@ public class AudioProcessor {
     public void start() throws SecurityException {
         if (isRecording) return;
 
-        audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
+        // Use UNPROCESSED or VOICE_RECOGNITION to try and bypass OS-level noise suppression
+        // that often filters out continuous whistling noises.
+        audioRecord = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
                 SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT, bufferSize);
 
         if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
