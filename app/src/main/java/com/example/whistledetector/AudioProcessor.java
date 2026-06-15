@@ -68,10 +68,12 @@ public class AudioProcessor {
             audioRecord = null;
         }
         if (recordingThread != null) {
-            try {
-                recordingThread.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            if (Thread.currentThread() != recordingThread) {
+                try {
+                    recordingThread.join();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
             recordingThread = null;
         }
@@ -109,6 +111,11 @@ public class AudioProcessor {
         // readSize samples represent (readSize / SAMPLE_RATE) seconds
         double durationInSeconds = (double) readSize / SAMPLE_RATE;
         double zcr = zeroCrossings / durationInSeconds;
+
+        // Diagnostic log: Print properties of any audible sound to Logcat to help troubleshoot emulator audio routing
+        if (averageAmplitude > 100) {
+            Log.d(TAG, "Audio frame detected: Amplitude=" + averageAmplitude + ", ZCR=" + zcr);
+        }
 
         if (averageAmplitude > AMPLITUDE_THRESHOLD &&
             zcr > MIN_ZERO_CROSSING_RATE &&
